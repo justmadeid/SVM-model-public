@@ -48,11 +48,11 @@ def save_df_to_mysql(dataframe, table_name, host, user, password, database):
             for index, row in dataframe.iterrows():
                 # Query untuk menyimpan data ke dalam tabel MySQL
                 insert_query = f"""
-                INSERT INTO {table_name} (judul, penulis, text, summary, date, source, translate, sentiment, svm)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO {table_name} (judul, penulis, text, summary, date, source, translate, sentiment, svm, image)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 # Eksekusi query dengan data dari setiap baris DataFrame
-                data_to_insert = (row['judul'], row['penulis'], row['text'], row['summary'], row['date'], row['source'], row['translate'], row['sentiment'], row['svm'])
+                data_to_insert = (row['judul'], row['penulis'], row['text'], row['summary'], row['date'], row['source'], row['translate'], row['sentiment'], row['svm'], row['image'])
                 cursor.execute(insert_query, data_to_insert)
 
             # Commit perubahan ke database
@@ -146,7 +146,7 @@ def fetch_and_save_news():
                 url_i.nlp()
 
                 df = pd.DataFrame(columns=['judul', 'penulis', 'text', 'summary', 'date', 'source',
-                                           'translate', 'sentiment', 'svm'])
+                                           'translate', 'sentiment', 'svm', 'image'])
                 sentiments = SentimentIntensityAnalyzer()
 
                 df['penulis'] = url_i.authors
@@ -161,6 +161,7 @@ def fetch_and_save_news():
                                             np.where(sentimentBlob > 0, "Positive", "Neutral"))
                 df['svm'] = df['summary'].apply(predict_sentiment)
                 df.loc[(df['sentiment'] == 'Neutral') & (df['svm'] == 'Positive'), 'svm'] = 'Neutral'
+                df['image'] = url_i.top_image
 
                 df_news = pd.concat([df_news, df], ignore_index=True)
                 df_dt = df_news.drop_duplicates(subset=['judul'])
